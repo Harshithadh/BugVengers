@@ -33,10 +33,8 @@ def make_json_serializable(obj):
             return str(obj)
     else:
         try:
-            # Try to convert to float if possible
             return float(obj)
         except (ValueError, TypeError):
-            # If conversion to float fails, convert to string
             return str(obj)
 
 def convert_gps_coords(coords, ref):
@@ -55,11 +53,9 @@ def format_gps_data(gps_info):
         altitude = gps_info.get(6, None)
         timestamp = gps_info.get(7, None)
         
-        # Convert timestamp values to float if they're fractions
         if timestamp:
             timestamp = [float(t) if isinstance(t, (Fraction, IFDRational)) else t for t in timestamp]
         
-        # Process raw GPS data to ensure it's JSON serializable
         raw_gps = {}
         for key, value in gps_info.items():
             if isinstance(value, (tuple, list)):
@@ -84,7 +80,6 @@ def get_image_metadata(image_path):
         image = Image.open(image_path)
         metadata = {}
         
-        # Get basic image information
         metadata.update({
             'filename': os.path.basename(image_path),
             'format': image.format,
@@ -96,11 +91,9 @@ def get_image_metadata(image_path):
             }
         })
 
-        # Get detailed EXIF data
         if hasattr(image, '_getexif'):
             exif = image._getexif()
             if exif is not None:
-                # Create a more organized structure for EXIF data
                 organized_exif = {
                     'device': {},
                     'image': {},
@@ -113,17 +106,13 @@ def get_image_metadata(image_path):
                     tag = TAGS.get(tag_id, tag_id)
                     data = exif.get(tag_id)
                     
-                    # Convert data to JSON serializable format first
                     data = make_json_serializable(data)
                     
-                    # Handle different data types
                     if isinstance(data, bytes):
                         try:
                             data = data.decode('utf-8')
                         except UnicodeDecodeError:
-                            continue  # Skip binary data that can't be decoded
-
-                    # Organize EXIF data into categories
+                            continue  
                     if tag in ['Make', 'Model', 'Software']:
                         organized_exif['device'][tag] = data
                     elif tag in ['ImageWidth', 'ImageLength', 'BitsPerSample', 'Compression']:
@@ -137,11 +126,9 @@ def get_image_metadata(image_path):
 
                 metadata['exif'] = organized_exif
 
-        # Handle ICC profile
         if 'icc_profile' in image.info:
             metadata['color_profile'] = 'ICC Profile Present'
 
-        # Get image statistics if possible
         try:
             stats = image.getextrema()
             metadata['color_stats'] = {
@@ -150,23 +137,21 @@ def get_image_metadata(image_path):
         except Exception:
             pass
 
-        # Get image histogram
         try:
             histogram = image.histogram()
             metadata['histogram'] = make_json_serializable(histogram)
         except Exception:
             pass
 
-        # Print all metadata for debugging
-        print("Image Metadata:")
-        for key, value in metadata.items():
-            print(f"{key}: {value}")
+        # print("Image Metadata:")
+        # for key, value in metadata.items():
+        #     print(f"{key}: {value}")
 
         return metadata
         
     except Exception as e:
         error_msg = f"Error processing image: {str(e)}"
-        print(error_msg)
+        # print(error_msg)
         return {'error': error_msg}
 
 @app.route('/get_meta_data', methods=['POST'])
@@ -185,9 +170,8 @@ def get_meta_data():
         
         metadata = get_image_metadata(filepath)
         
-        # Clean up the uploaded file
         os.remove(filepath)
-        
+        print(metadata)
         return jsonify(metadata)
     
     return jsonify({'error': 'Invalid file type'}), 400

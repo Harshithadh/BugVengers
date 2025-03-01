@@ -1,3 +1,7 @@
 MetaMorph/
 app/
 .DS_Store
+flask_server/__pycache__/
+flask_server/.venv/
+flask_server/uploads/
+flask_server/.dist/

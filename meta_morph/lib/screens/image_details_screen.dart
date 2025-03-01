@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/image_metadata_model.dart';
 import 'full_metadata_screen.dart';
+import 'edit_metadata_screen.dart';
 
 class ImageDetailsScreen extends StatelessWidget {
   final ImageMetadata metadata;
@@ -26,71 +27,81 @@ class ImageDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (hasLocation) ...[
-              Container(
-                height: MediaQuery.of(context).size.height * 0.4,
-                margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      spreadRadius: 2,
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+              GestureDetector(
+                onTap: () {
+                  launchUrl(
+                    Uri.parse(
+                      'https://www.google.com/maps/search/?api=1&query=${metadata.latitude},${metadata.longitude}',
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Stack(
-                    children: [
-                      GoogleMap(
-                        mapType: MapType.normal,
-                        initialCameraPosition: CameraPosition(
-                          target: LatLng(
-                            metadata.latitude!,
-                            metadata.longitude!,
-                          ),
-                          zoom: 15,
-                        ),
-                        markers: {
-                          Marker(
-                            markerId: const MarkerId('imageLocation'),
-                            position: LatLng(
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
+                child: Container(
+                  height: MediaQuery.of(context).size.height * 0.4,
+                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 2,
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Stack(
+                      children: [
+                        GoogleMap(
+                          mapType: MapType.normal,
+                          initialCameraPosition: CameraPosition(
+                            target: LatLng(
                               metadata.latitude!,
                               metadata.longitude!,
                             ),
-                            infoWindow: InfoWindow(
-                              title: 'Photo Location',
-                              snippet:
-                                  '${metadata.latitude!.toStringAsFixed(6)}, ${metadata.longitude!.toStringAsFixed(6)}',
+                            zoom: 15,
+                          ),
+                          markers: {
+                            Marker(
+                              markerId: const MarkerId('imageLocation'),
+                              position: LatLng(
+                                metadata.latitude!,
+                                metadata.longitude!,
+                              ),
+                              infoWindow: InfoWindow(
+                                title: 'Photo Location',
+                                snippet:
+                                    '${metadata.latitude!.toStringAsFixed(6)}, ${metadata.longitude!.toStringAsFixed(6)}',
+                              ),
+                            ),
+                          },
+                          myLocationEnabled: false,
+                          zoomControlsEnabled: true,
+                          mapToolbarEnabled: true,
+                        ),
+                        Positioned(
+                          bottom: 16,
+                          left: 16,
+                          child: FloatingActionButton(
+                            heroTag: 'openMap',
+                            onPressed: () {
+                              launchUrl(
+                                Uri.parse(
+                                  'https://www.google.com/maps/search/?api=1&query=${metadata.latitude},${metadata.longitude}',
+                                ),
+                              );
+                            },
+                            backgroundColor: Colors.white,
+                            child: const Icon(
+                              Icons.open_in_new,
+                              color: Colors.blue,
                             ),
                           ),
-                        },
-                        myLocationEnabled: false,
-                        zoomControlsEnabled: true,
-                        mapToolbarEnabled: true,
-                      ),
-                      Positioned(
-                        bottom: 16,
-                        right: 16,
-                        child: FloatingActionButton(
-                          heroTag: 'openMap',
-                          onPressed: () {
-                            launchUrl(
-                              Uri.parse(
-                                'https://www.google.com/maps/search/?api=1&query=${metadata.latitude},${metadata.longitude}',
-                              ),
-                            );
-                          },
-                          backgroundColor: Colors.white,
-                          child: const Icon(
-                            Icons.open_in_new,
-                            color: Colors.blue,
-                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -190,9 +201,51 @@ class ImageDetailsScreen extends StatelessWidget {
                             ),
                             elevation: 2,
                           ),
-                          icon: const Icon(Icons.info_outline),
+                          icon: const Icon(
+                            Icons.info_outline,
+                            color: Colors.white,
+                          ),
                           label: const Text(
                             'View All Metadata',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => EditMetadataScreen(
+                                      metadata: metadata,
+                                      imagePath: metadata.path,
+                                    ),
+                              ),
+                            );
+                            if (result == true) {
+                              // Refresh the metadata
+                              // You'll need to implement this
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                          ),
+                          icon: const Icon(Icons.edit, color: Colors.white),
+                          label: const Text(
+                            'Edit Metadata',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,

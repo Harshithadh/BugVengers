@@ -5,6 +5,7 @@ class ImageMetadata {
   final Map<String, dynamic> deviceInfo;
   final Map<String, dynamic> photoInfo;
   final Map<String, dynamic> allMetadata;
+  final String path;
 
   ImageMetadata({
     this.latitude,
@@ -13,9 +14,13 @@ class ImageMetadata {
     required this.deviceInfo,
     required this.photoInfo,
     required this.allMetadata,
+    required this.path,
   });
 
-  factory ImageMetadata.fromJson(Map<String, dynamic> json) {
+  factory ImageMetadata.fromJson(
+    Map<String, dynamic> json, {
+    required String path,
+  }) {
     final exif = json['exif'] as Map<String, dynamic>;
     return ImageMetadata(
       latitude: exif['gps']?['latitude'] as double?,
@@ -24,6 +29,7 @@ class ImageMetadata {
       deviceInfo: exif['device'] as Map<String, dynamic>,
       photoInfo: exif['photo'] as Map<String, dynamic>,
       allMetadata: json,
+      path: path,
     );
   }
 
@@ -35,6 +41,7 @@ class ImageMetadata {
       'deviceInfo': deviceInfo,
       'photoInfo': photoInfo,
       'allMetadata': allMetadata,
+      'path': path,
     };
   }
 }

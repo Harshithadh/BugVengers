@@ -67,7 +67,10 @@ class HomeScreen extends ConsumerWidget {
                             MaterialPageRoute(
                               builder:
                                   (context) => ImageDetailsScreen(
-                                    metadata: ImageMetadata.fromJson(metadata),
+                                    metadata: ImageMetadata.fromJson(
+                                      metadata,
+                                      path: file.path,
+                                    ),
                                   ),
                             ),
                           );
@@ -107,6 +110,7 @@ class HomeScreen extends ConsumerWidget {
                                     (context) => ImageDetailsScreen(
                                       metadata: ImageMetadata.fromJson(
                                         file.metadata!,
+                                        path: file.file.value!,
                                       ),
                                     ),
                               ),

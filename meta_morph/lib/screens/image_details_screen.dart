@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/image_metadata_model.dart';
 import 'full_metadata_screen.dart';
+import 'edit_metadata_screen.dart';
 
 class ImageDetailsScreen extends StatelessWidget {
   final ImageMetadata metadata;
@@ -76,9 +77,9 @@ class ImageDetailsScreen extends StatelessWidget {
                               ),
                             ),
                           },
-                          // myLocationEnabled: false,
-                          // zoomControlsEnabled: true,
-                          // mapToolbarEnabled: true,
+                          myLocationEnabled: false,
+                          zoomControlsEnabled: true,
+                          mapToolbarEnabled: true,
                         ),
                         Positioned(
                           bottom: 16,
@@ -206,6 +207,45 @@ class ImageDetailsScreen extends StatelessWidget {
                           ),
                           label: const Text(
                             'View All Metadata',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => EditMetadataScreen(
+                                      metadata: metadata,
+                                      imagePath: metadata.path,
+                                    ),
+                              ),
+                            );
+                            if (result == true) {
+                              // Refresh the metadata
+                              // You'll need to implement this
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                          ),
+                          icon: const Icon(Icons.edit, color: Colors.white),
+                          label: const Text(
+                            'Edit Metadata',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,

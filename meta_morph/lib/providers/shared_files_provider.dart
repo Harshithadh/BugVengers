@@ -27,7 +27,7 @@ class SharedFilesNotifier extends StateNotifier<List<SharedFileModel>> {
       final initialFiles =
           await FlutterSharingIntent.instance.getInitialSharing();
       if (initialFiles.isNotEmpty) {
-        await _handleSharedFiles(initialFiles);
+        await _handleSharedFiles(ref, initialFiles);
       }
 
       // Then listen for new shares
@@ -36,7 +36,7 @@ class SharedFilesNotifier extends StateNotifier<List<SharedFileModel>> {
           .listen(
             (List<SharedFile> files) async {
               print("Received shared files: ${files.length}");
-              await _handleSharedFiles(files);
+              await _handleSharedFiles(ref, files);
             },
             onError: (error) {
               print("Error in sharing stream: $error");
@@ -47,7 +47,7 @@ class SharedFilesNotifier extends StateNotifier<List<SharedFileModel>> {
     }
   }
 
-  Future<void> _handleSharedFiles(List<SharedFile> files) async {
+  Future<void> _handleSharedFiles(Ref ref, List<SharedFile> files) async {
     try {
       // First update state with basic file info
       final models = files.map((file) => SharedFileModel(file: file)).toList();

@@ -20,16 +20,23 @@ class MetadataDisplay extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildSection('File Information', [
+            _buildMetadataRow('📄 Filename', metadata!.filename ?? 'Unknown'),
+            _buildMetadataRow('🎨 Format', metadata!.format ?? 'Unknown'),
+            _buildMetadataRow('Mode', metadata!.mode ?? 'Unknown'),
+          ]),
           _buildSection('Camera Information', [
-            _buildMetadataRow(
-              '📸 Camera',
-              '${metadata!.make} ${metadata!.model}',
-            ),
+            if (metadata!.make != null || metadata!.model != null)
+              _buildMetadataRow(
+                '📸 Camera',
+                '${metadata!.make ?? ''} ${metadata!.model ?? ''}'.trim(),
+              ),
             if (metadata!.software != null)
               _buildMetadataRow('📱 Software', metadata!.software!),
           ]),
           _buildSection('Image Details', [
-            _buildMetadataRow('📅 Date', metadata!.dateTime ?? 'Unknown'),
+            if (metadata!.dateTime != null)
+              _buildMetadataRow('📅 Date', metadata!.dateTime!),
             _buildMetadataRow(
               '📏 Resolution',
               '${metadata!.width}x${metadata!.height}',
@@ -53,10 +60,10 @@ class MetadataDisplay extends StatelessWidget {
                 '${metadata!.gpsLatitude}, ${metadata!.gpsLongitude}',
               ),
             ]),
-          if (metadata!.additionalData != null)
+          if (metadata!.additionalExifData != null)
             _buildSection(
-              'Additional Information',
-              metadata!.additionalData!.entries
+              'Additional EXIF Data',
+              metadata!.additionalExifData!.entries
                   .map((e) => _buildMetadataRow(e.key, e.value.toString()))
                   .toList(),
             ),

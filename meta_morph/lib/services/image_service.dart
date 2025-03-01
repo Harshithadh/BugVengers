@@ -34,7 +34,7 @@ class ImageService {
       // Send the request and handle the response properly
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-
+      // print(response.statusCode)ExifTags
       if (response.statusCode != 200) {
         throw Exception('Failed to get metadata: ${response.statusCode}');
       }

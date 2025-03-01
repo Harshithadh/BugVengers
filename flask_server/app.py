@@ -3,6 +3,8 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 import os
 from werkzeug.utils import secure_filename
+from fractions import Fraction
+from PIL.TiffImagePlugin import IFDRational
 
 app = Flask(__name__)
 
@@ -24,10 +26,58 @@ def make_json_serializable(obj):
         return [make_json_serializable(item) for item in obj]
     elif isinstance(obj, dict):
         return {key: make_json_serializable(value) for key, value in obj.items()}
-    elif str(type(obj)) == "<class 'PIL.TiffImagePlugin.IFDRational'>":
-        return float(obj)
+    elif isinstance(obj, (IFDRational, Fraction)):
+        try:
+            return float(obj)
+        except (ValueError, TypeError):
+            return str(obj)
     else:
-        return str(obj)
+        try:
+            # Try to convert to float if possible
+            return float(obj)
+        except (ValueError, TypeError):
+            # If conversion to float fails, convert to string
+            return str(obj)
+
+def convert_gps_coords(coords, ref):
+    decimal_degrees = coords[0] + coords[1] / 60 + coords[2] / 3600
+    if ref in ['S', 'W']:
+        decimal_degrees = -decimal_degrees
+    return decimal_degrees
+
+def format_gps_data(gps_info):
+    if not gps_info:
+        return None
+
+    try:
+        lat = convert_gps_coords(gps_info[2], gps_info[1])
+        lon = convert_gps_coords(gps_info[4], gps_info[3])
+        altitude = gps_info.get(6, None)
+        timestamp = gps_info.get(7, None)
+        
+        # Convert timestamp values to float if they're fractions
+        if timestamp:
+            timestamp = [float(t) if isinstance(t, (Fraction, IFDRational)) else t for t in timestamp]
+        
+        # Process raw GPS data to ensure it's JSON serializable
+        raw_gps = {}
+        for key, value in gps_info.items():
+            if isinstance(value, (tuple, list)):
+                raw_gps[key] = [make_json_serializable(v) for v in value]
+            else:
+                raw_gps[key] = make_json_serializable(value)
+        
+        gps_data = {
+            'latitude': round(float(lat), 6),
+            'longitude': round(float(lon), 6),
+            'altitude': float(altitude) if altitude else None,
+            'timestamp': f"{timestamp[0]}:{timestamp[1]}:{timestamp[2]}" if timestamp else None,
+            'raw': raw_gps
+        }
+        return gps_data
+    except Exception as e:
+        print(f"Error parsing GPS data: {e}")
+        return None
 
 def get_image_metadata(image_path):
     try:
@@ -39,53 +89,64 @@ def get_image_metadata(image_path):
             'filename': os.path.basename(image_path),
             'format': image.format,
             'mode': image.mode,
-            'size': image.size,
-            'width': image.width,
-            'height': image.height,
-            'info': make_json_serializable(dict(image.info)),  # Get all available info
+            'size': {
+                'width': image.width,
+                'height': image.height,
+                'resolution': image.size
+            }
         })
 
         # Get detailed EXIF data
         if hasattr(image, '_getexif'):
             exif = image._getexif()
             if exif is not None:
+                # Create a more organized structure for EXIF data
+                organized_exif = {
+                    'device': {},
+                    'image': {},
+                    'photo': {},
+                    'gps': {},
+                    'other': {}
+                }
+
                 for tag_id in exif:
                     tag = TAGS.get(tag_id, tag_id)
                     data = exif.get(tag_id)
+                    
+                    # Convert data to JSON serializable format first
+                    data = make_json_serializable(data)
                     
                     # Handle different data types
                     if isinstance(data, bytes):
                         try:
                             data = data.decode('utf-8')
                         except UnicodeDecodeError:
-                            data = data.hex()
-                    
-                    metadata[f'EXIF_{tag}'] = make_json_serializable(data)
+                            continue  # Skip binary data that can't be decoded
 
-        # Get ICC profile if exists
+                    # Organize EXIF data into categories
+                    if tag in ['Make', 'Model', 'Software']:
+                        organized_exif['device'][tag] = data
+                    elif tag in ['ImageWidth', 'ImageLength', 'BitsPerSample', 'Compression']:
+                        organized_exif['image'][tag] = data
+                    elif tag in ['DateTimeOriginal', 'CreateDate', 'ExposureTime', 'FNumber', 'ISOSpeedRatings']:
+                        organized_exif['photo'][tag] = data
+                    elif tag == 'GPSInfo':
+                        organized_exif['gps'] = format_gps_data(data)
+                    else:
+                        organized_exif['other'][tag] = data
+
+                metadata['exif'] = organized_exif
+
+        # Handle ICC profile
         if 'icc_profile' in image.info:
-            metadata['icc_profile'] = 'Present'
-
-        # Get additional PIL image attributes
-        additional_attrs = [
-            'is_animated',
-            'n_frames',
-            'palette',
-            'layers',
-        ]
-        
-        for attr in additional_attrs:
-            if hasattr(image, attr):
-                try:
-                    value = getattr(image, attr)
-                    metadata[attr] = make_json_serializable(value)
-                except Exception:
-                    pass
+            metadata['color_profile'] = 'ICC Profile Present'
 
         # Get image statistics if possible
         try:
             stats = image.getextrema()
-            metadata['color_extrema'] = make_json_serializable(stats)
+            metadata['color_stats'] = {
+                'extrema': make_json_serializable(stats)
+            }
         except Exception:
             pass
 

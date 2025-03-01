@@ -26,71 +26,81 @@ class ImageDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (hasLocation) ...[
-              Container(
-                height: MediaQuery.of(context).size.height * 0.4,
-                margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      spreadRadius: 2,
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+              GestureDetector(
+                onTap: () {
+                  launchUrl(
+                    Uri.parse(
+                      'https://www.google.com/maps/search/?api=1&query=${metadata.latitude},${metadata.longitude}',
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Stack(
-                    children: [
-                      GoogleMap(
-                        mapType: MapType.normal,
-                        initialCameraPosition: CameraPosition(
-                          target: LatLng(
-                            metadata.latitude!,
-                            metadata.longitude!,
-                          ),
-                          zoom: 15,
-                        ),
-                        markers: {
-                          Marker(
-                            markerId: const MarkerId('imageLocation'),
-                            position: LatLng(
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
+                child: Container(
+                  height: MediaQuery.of(context).size.height * 0.4,
+                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 2,
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Stack(
+                      children: [
+                        GoogleMap(
+                          mapType: MapType.normal,
+                          initialCameraPosition: CameraPosition(
+                            target: LatLng(
                               metadata.latitude!,
                               metadata.longitude!,
                             ),
-                            infoWindow: InfoWindow(
-                              title: 'Photo Location',
-                              snippet:
-                                  '${metadata.latitude!.toStringAsFixed(6)}, ${metadata.longitude!.toStringAsFixed(6)}',
+                            zoom: 15,
+                          ),
+                          markers: {
+                            Marker(
+                              markerId: const MarkerId('imageLocation'),
+                              position: LatLng(
+                                metadata.latitude!,
+                                metadata.longitude!,
+                              ),
+                              infoWindow: InfoWindow(
+                                title: 'Photo Location',
+                                snippet:
+                                    '${metadata.latitude!.toStringAsFixed(6)}, ${metadata.longitude!.toStringAsFixed(6)}',
+                              ),
+                            ),
+                          },
+                          // myLocationEnabled: false,
+                          // zoomControlsEnabled: true,
+                          // mapToolbarEnabled: true,
+                        ),
+                        Positioned(
+                          bottom: 16,
+                          left: 16,
+                          child: FloatingActionButton(
+                            heroTag: 'openMap',
+                            onPressed: () {
+                              launchUrl(
+                                Uri.parse(
+                                  'https://www.google.com/maps/search/?api=1&query=${metadata.latitude},${metadata.longitude}',
+                                ),
+                              );
+                            },
+                            backgroundColor: Colors.white,
+                            child: const Icon(
+                              Icons.open_in_new,
+                              color: Colors.blue,
                             ),
                           ),
-                        },
-                        myLocationEnabled: false,
-                        zoomControlsEnabled: true,
-                        mapToolbarEnabled: true,
-                      ),
-                      Positioned(
-                        bottom: 16,
-                        right: 16,
-                        child: FloatingActionButton(
-                          heroTag: 'openMap',
-                          onPressed: () {
-                            launchUrl(
-                              Uri.parse(
-                                'https://www.google.com/maps/search/?api=1&query=${metadata.latitude},${metadata.longitude}',
-                              ),
-                            );
-                          },
-                          backgroundColor: Colors.white,
-                          child: const Icon(
-                            Icons.open_in_new,
-                            color: Colors.blue,
-                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -190,7 +200,10 @@ class ImageDetailsScreen extends StatelessWidget {
                             ),
                             elevation: 2,
                           ),
-                          icon: const Icon(Icons.info_outline),
+                          icon: const Icon(
+                            Icons.info_outline,
+                            color: Colors.white,
+                          ),
                           label: const Text(
                             'View All Metadata',
                             style: TextStyle(

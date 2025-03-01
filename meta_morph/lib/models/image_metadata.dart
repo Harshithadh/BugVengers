@@ -1,73 +1,50 @@
 class ImageMetadata {
-  final String? make;
-  final String? model;
-  final String? dateTime;
-  final int? width;
-  final int? height;
-  final double? gpsLatitude;
-  final double? gpsLongitude;
-  final String? software;
-  final String? exposureTime;
-  final String? fNumber;
-  final int? iso;
-  final String? focalLength;
-  final Map<String, dynamic>? additionalData; // For any extra metadata
+  final String? filename;
+  final String? format;
+  final String? mode;
+  final Map<String, dynamic>? size;
+  final Map<String, dynamic>? exif;
+  final String? colorProfile;
+  final Map<String, dynamic>? colorStats;
+  final List<int>? histogram;
 
   ImageMetadata({
-    this.make,
-    this.model,
-    this.dateTime,
-    this.width,
-    this.height,
-    this.gpsLatitude,
-    this.gpsLongitude,
-    this.software,
-    this.exposureTime,
-    this.fNumber,
-    this.iso,
-    this.focalLength,
-    this.additionalData,
+    this.filename,
+    this.format,
+    this.mode,
+    this.size,
+    this.exif,
+    this.colorProfile,
+    this.colorStats,
+    this.histogram,
   });
 
   factory ImageMetadata.fromJson(Map<String, dynamic> json) {
-    // Create a copy of json for additional data
-    final additionalFields = Map<String, dynamic>.from(json);
-    // Remove known fields
-    [
-      'make',
-      'model',
-      'datetime',
-      'width',
-      'height',
-      'gps_latitude',
-      'gps_longitude',
-      'software',
-      'exposure_time',
-      'f_number',
-      'iso',
-      'focal_length',
-    ].forEach(additionalFields.remove);
-
     return ImageMetadata(
-      make: json['make'] as String?,
-      model: json['model'] as String?,
-      dateTime: json['datetime'] as String?,
-      width: json['width'] as int?,
-      height: json['height'] as int?,
-      gpsLatitude:
-          json['gps_latitude'] != null
-              ? double.tryParse(json['gps_latitude'].toString())
-              : null,
-      gpsLongitude:
-          json['gps_longitude'] != null
-              ? double.tryParse(json['gps_longitude'].toString())
-              : null,
-      software: json['software'] as String?,
-      exposureTime: json['exposure_time'] as String?,
-      fNumber: json['f_number'] as String?,
-      iso: json['iso'] as int?,
-      focalLength: json['focal_length'] as String?,
-      additionalData: additionalFields.isNotEmpty ? additionalFields : null,
+      filename: json['filename'] as String?,
+      format: json['format'] as String?,
+      mode: json['mode'] as String?,
+      size: json['size'] as Map<String, dynamic>?,
+      exif: json['exif'] as Map<String, dynamic>?,
+      colorProfile: json['color_profile'] as String?,
+      colorStats: json['color_stats'] as Map<String, dynamic>?,
+      histogram: (json['histogram'] as List<dynamic>?)?.cast<int>(),
     );
   }
+
+  // Helper getters for commonly used values
+  String? get make => exif?['device']?['Make'] as String?;
+  String? get model => exif?['device']?['Model'] as String?;
+  String? get software => exif?['device']?['Software'] as String?;
+  String? get dateTime => exif?['photo']?['DateTimeOriginal'] as String?;
+  int? get width => size?['width'] as int?;
+  int? get height => size?['height'] as int?;
+  double? get gpsLatitude => exif?['gps']?['latitude'] as double?;
+  double? get gpsLongitude => exif?['gps']?['longitude'] as double?;
+  String? get exposureTime => exif?['photo']?['ExposureTime']?.toString();
+  String? get fNumber => exif?['photo']?['FNumber']?.toString();
+  int? get iso => exif?['photo']?['ISOSpeedRatings'] as int?;
+  String? get focalLength => exif?['photo']?['FocalLength']?.toString();
+
+  Map<String, dynamic>? get additionalExifData => exif?['other'];
 }

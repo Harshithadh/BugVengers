@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:meta_morph/consts.dart';
 import 'dart:convert';
-import '../models/image_metadata.dart';
+// import '../models/image_metadata.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -10,35 +10,47 @@ class ImageService {
   static const String baseUrl = BASE_URL; // For Android emulator
   final ImagePicker _picker = ImagePicker();
 
-  Future<ImageMetadata> getImageMetadata(File imageFile) async {
+  Future<Map<String, dynamic>> getImageMetadata(File imageFile) async {
     try {
-      // Verify file exists and is readable
       if (!await imageFile.exists()) {
         throw Exception('Image file does not exist');
       }
 
-      var request = http.MultipartRequest(
+      // Create the multipart request
+      final request = http.MultipartRequest(
         'POST',
+
         Uri.parse('$baseUrl/get_meta_data'),
       );
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'file',
-          imageFile.path,
-          contentType: MediaType('image', 'jpeg'), // or appropriate image type
-        ),
-      );
-      print(request.files);
-      var response = await request.send();
-      var responseData = await response.stream.bytesToString();
 
-      if (response.statusCode == 200) {
-        return ImageMetadata.fromJson(json.decode(responseData));
-      } else {
+      // Add the file with proper error handling
+      final file = await http.MultipartFile.fromPath(
+        'file',
+        imageFile.path,
+        contentType: MediaType('image', '*'),
+      );
+      request.files.add(file);
+
+      // Send the request and handle the response properly
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode != 200) {
         throw Exception('Failed to get metadata: ${response.statusCode}');
       }
+
+      final jsonResponse = json.decode(response.body);
+      return {
+        'exif': {
+          'device': jsonResponse['exif']['device'],
+          'photo': jsonResponse['exif']['photo'],
+          'gps': jsonResponse['exif']['gps'],
+          'other': jsonResponse['exif']['other'],
+        },
+      };
     } catch (e) {
-      throw Exception('Error getting metadata: $e');
+      print('Error getting metadata: $e');
+      rethrow;
     }
   }
 

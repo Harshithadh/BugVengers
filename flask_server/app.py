@@ -252,6 +252,7 @@ def preserve_metadata_structure(image_path):
 
 @app.route('/get_meta_data', methods=['POST'])
 def get_meta_data():
+    print(request.files)
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     
@@ -266,8 +267,7 @@ def get_meta_data():
         
         metadata = get_image_metadata(filepath)
         
-        # os.remove(filepath)
-        # print(metadata)
+        os.remove(filepath)
         return jsonify(metadata)
     
     return jsonify({'error': 'Invalid file type'}), 400
@@ -285,47 +285,29 @@ def modify_metadata():
         if image_file.filename == '' or not allowed_file(image_file.filename):
             return jsonify({'error': 'Invalid file'}), 400
 
-        # Get the modifications JSON
         try:
             data = json.loads(request.form.get('modifications', '{}'))
-            # Extract the metadata modifications from the nested structure
             modifications = data.get('metadata', {}).get('exif', {})
         except json.JSONDecodeError as e:
             return jsonify({'error': f'Invalid modifications JSON: {str(e)}'}), 400
 
-        # Save original image temporarily
         filename = secure_filename(image_file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         output_filepath = os.path.join(app.config['UPLOAD_FOLDER'], f'modified_{filename}')
         image_file.save(filepath)
 
-        # Open image and get existing EXIF data
-        image = Image.open(filepath)
-        existing_exif = image._getexif() if hasattr(image, '_getexif') else {}
-        
-        # Convert existing EXIF to piexif format
-        exif_dict = {
-            '0th': {},
-            '1st': {},
-            'Exif': {},
-            'GPS': {},
-            'Interop': {}
-        }
+        # Get existing EXIF data
+        exif_dict = piexif.load(filepath)
+        if not exif_dict:
+            exif_dict = {
+                '0th': {},
+                '1st': {},
+                'Exif': {},
+                'GPS': {},
+                'Interop': {}
+            }
 
-        # Map the existing EXIF data to piexif format
-        if existing_exif:
-            for tag_id, value in existing_exif.items():
-                try:
-                    if tag_id in piexif.ImageIFD.__dict__.values():
-                        exif_dict['0th'][tag_id] = value
-                    elif tag_id in piexif.ExifIFD.__dict__.values():
-                        exif_dict['Exif'][tag_id] = value
-                    elif tag_id in piexif.GPSIFD.__dict__.values():
-                        exif_dict['GPS'][tag_id] = value
-                except:
-                    continue
-
-        # Update EXIF with modifications
+        # Update device info
         if 'device' in modifications:
             device = modifications['device']
             if 'Make' in device:
@@ -335,22 +317,51 @@ def modify_metadata():
             if 'Software' in device:
                 exif_dict['0th'][piexif.ImageIFD.Software] = device['Software'].encode('utf-8')
 
+        # Update photo info
         if 'photo' in modifications:
             photo = modifications['photo']
             for key, value in photo.items():
                 try:
                     if key == 'DateTimeOriginal':
                         exif_dict['Exif'][piexif.ExifIFD.DateTimeOriginal] = value.encode('utf-8')
+                        # Also update related datetime fields
+                        exif_dict['0th'][piexif.ImageIFD.DateTime] = value.encode('utf-8')
+                        exif_dict['Exif'][piexif.ExifIFD.DateTimeDigitized] = value.encode('utf-8')
                     elif key == 'ExposureTime':
-                        exif_dict['Exif'][piexif.ExifIFD.ExposureTime] = (int(value * 1000000), 1000000)
+                        num = int(value * 1000000)
+                        den = 1000000
+                        exif_dict['Exif'][piexif.ExifIFD.ExposureTime] = (num, den)
                     elif key == 'FNumber':
-                        exif_dict['Exif'][piexif.ExifIFD.FNumber] = (int(value * 10), 10)
+                        num = int(value * 10)
+                        den = 10
+                        exif_dict['Exif'][piexif.ExifIFD.FNumber] = (num, den)
                     elif key == 'ISOSpeedRatings':
-                        exif_dict['Exif'][piexif.ExifIFD.ISOSpeedRatings] = value
-                    # Add other photo attributes as needed
+                        exif_dict['Exif'][piexif.ExifIFD.ISOSpeedRatings] = int(value)
+                    elif key == 'ShutterSpeedValue':
+                        num = int(value * 10000)
+                        den = 10000
+                        exif_dict['Exif'][piexif.ExifIFD.ShutterSpeedValue] = (num, den)
+                    elif key == 'ApertureValue':
+                        num = int(value * 10000)
+                        den = 10000
+                        exif_dict['Exif'][piexif.ExifIFD.ApertureValue] = (num, den)
+                    elif key == 'BrightnessValue':
+                        num = int(value * 10000)
+                        den = 10000
+                        exif_dict['Exif'][piexif.ExifIFD.BrightnessValue] = (num, den)
+                    elif key == 'ExposureBiasValue':
+                        num = int(value * 1000)
+                        den = 1000
+                        exif_dict['Exif'][piexif.ExifIFD.ExposureBiasValue] = (num, den)
+                    elif key == 'FocalLength':
+                        num = int(value * 100)
+                        den = 100
+                        exif_dict['Exif'][piexif.ExifIFD.FocalLength] = (num, den)
                 except Exception as e:
                     print(f"Error setting photo attribute {key}: {str(e)}")
+                    continue
 
+        # Update GPS info
         if 'gps' in modifications:
             gps = modifications['gps']
             if 'latitude' in gps and 'longitude' in gps:
@@ -372,32 +383,38 @@ def modify_metadata():
                     exif_dict['GPS'][piexif.GPSIFD.GPSLongitude] = [(lon_deg, 1), (lon_min, 1), (lon_sec, 100)]
                     
                     if 'altitude' in gps:
-                        exif_dict['GPS'][piexif.GPSIFD.GPSAltitude] = (int(float(gps['altitude']) * 100), 100)
+                        alt = float(gps['altitude'])
+                        exif_dict['GPS'][piexif.GPSIFD.GPSAltitude] = (int(alt * 100), 100)
+                        exif_dict['GPS'][piexif.GPSIFD.GPSAltitudeRef] = 0 if alt >= 0 else 1
                 except Exception as e:
                     print(f"Error setting GPS data: {str(e)}")
 
         try:
-            # Create new exif data
+            # Load original image
+            image = Image.open(filepath)
+            
+            # Dump EXIF data
             exif_bytes = piexif.dump(exif_dict)
-            # Save modified image while preserving quality
+            
+            # Save with new EXIF
             image.save(output_filepath, 'jpeg', quality=95, exif=exif_bytes)
+            
+            # Get updated metadata
+            metadata = get_image_metadata(output_filepath)
+            
+            # Read modified image
+            with open(output_filepath, 'rb') as img_file:
+                modified_image = img_file.read()
+            
+            response = {
+                'metadata': metadata,
+                'image': base64.b64encode(modified_image).decode('utf-8')
+            }
+            return jsonify(response)
+
         except Exception as e:
-            print(f"Error saving with EXIF: {str(e)}")
-            image.save(output_filepath, 'jpeg', quality=95)
-
-        # Get metadata in original format
-        metadata = get_image_metadata(output_filepath)
-
-        # Read the modified image
-        with open(output_filepath, 'rb') as img_file:
-            modified_image = img_file.read()
-
-        # Return both image and metadata
-        response = {
-            'metadata': metadata,
-            'image': base64.b64encode(modified_image).decode('utf-8')
-        }
-        return jsonify(response)
+            print(f"Error saving image: {str(e)}")
+            return jsonify({'error': 'Failed to save modified image'}), 500
 
     except Exception as e:
         print(f"Modification error: {str(e)}")

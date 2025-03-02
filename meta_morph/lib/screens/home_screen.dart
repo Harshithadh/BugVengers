@@ -32,7 +32,6 @@ class HomeScreen extends ConsumerWidget {
                       if (result != null) {
                         final file = File(result.path);
 
-                        // Show loading indicator
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -45,8 +44,7 @@ class HomeScreen extends ConsumerWidget {
                             .read(imageServiceProvider)
                             .getImageMetadata(file);
 
-                        if (metadata != null && context.mounted) {
-                          // Add to shared files list first
+                        if (context.mounted) {
                           ref
                               .read(sharedFilesProvider.notifier)
                               .addFile(
@@ -61,7 +59,6 @@ class HomeScreen extends ConsumerWidget {
                                 ),
                               );
 
-                          // Then navigate
                           Navigator.push(
                             context,
                             MaterialPageRoute(

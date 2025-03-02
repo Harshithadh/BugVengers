@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import '../models/shared_file_model.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 
 class MediaDisplay extends StatelessWidget {

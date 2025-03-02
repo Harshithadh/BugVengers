@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_place_picker_mb/google_maps_place_picker.dart';
 import '../models/image_metadata_model.dart';
 import '../services/metadata_service.dart';
+import '../screens/modification_success_screen.dart';
+// import 'package:google_maps_place_picker_mb/google_maps_place_picker.dart';
+// import 'package:google_maps_place_picker_mb/google_maps_place_picker_mb.dart';
 
 class EditMetadataScreen extends StatefulWidget {
   final ImageMetadata metadata;
@@ -39,7 +44,6 @@ class _EditMetadataScreenState extends State<EditMetadataScreen> {
       text: widget.metadata.deviceInfo['Software'],
     );
 
-    // Convert date format from "YYYY:MM:DD HH:mm:ss" to "YYYY-MM-DD HH:mm:ss"
     if (widget.metadata.dateTime != null) {
       final formattedDate = widget.metadata.dateTime!
           .replaceFirst(':', '-')
@@ -60,48 +64,82 @@ class _EditMetadataScreenState extends State<EditMetadataScreen> {
   Future<void> _saveChanges() async {
     setState(() => _isLoading = true);
 
-    final modifications = {
-      "modifications": {
-        "device": {
-          "make": _makeController.text,
-          "model": _modelController.text,
-          "software": _softwareController.text,
+    final updatedMetadata = {
+      'filename': widget.metadata.allMetadata['filename'],
+      'format': widget.metadata.allMetadata['format'],
+      'mode': widget.metadata.allMetadata['mode'],
+      'size': widget.metadata.allMetadata['size'],
+      'exif': {
+        'device': {
+          'Make': _makeController.text,
+          'Model': _modelController.text,
+          'Software': _softwareController.text,
         },
-        "location":
+        'image': widget.metadata.allMetadata['exif']['image'],
+        'photo': {
+          ...widget.metadata.allMetadata['exif']['photo'],
+          'DateTimeOriginal':
+              _selectedDateTime
+                  ?.toIso8601String()
+                  .replaceAll('-', ':')
+                  .replaceAll('T', ' ')
+                  .split('.')[0],
+        },
+        'gps':
             _selectedLocation != null
                 ? {
-                  "latitude": _selectedLocation!.latitude,
-                  "longitude": _selectedLocation!.longitude,
+                  'latitude': _selectedLocation!.latitude,
+                  'longitude': _selectedLocation!.longitude,
+                  'altitude':
+                      widget.metadata.allMetadata['exif']['gps']['altitude'],
+                  'timestamp':
+                      widget.metadata.allMetadata['exif']['gps']['timestamp'],
+                  'raw': widget.metadata.allMetadata['exif']['gps']['raw'],
                 }
-                : null,
-        "datetime": {
-          "date": _selectedDateTime?.toIso8601String().split('T')[0],
-          "time":
-              "${_selectedDateTime?.hour.toString().padLeft(2, '0')}:${_selectedDateTime?.minute.toString().padLeft(2, '0')}:00",
-          "timezone": DateTime.now().timeZoneOffset.toString().split('.')[0],
+                : widget.metadata.allMetadata['exif']['gps'],
+        'other': {
+          ...widget.metadata.allMetadata['exif']['other'],
+          'DateTime':
+              _selectedDateTime
+                  ?.toIso8601String()
+                  .replaceAll('-', ':')
+                  .replaceAll('T', ' ')
+                  .split('.')[0],
+          'DateTimeDigitized':
+              _selectedDateTime
+                  ?.toIso8601String()
+                  .replaceAll('-', ':')
+                  .replaceAll('T', ' ')
+                  .split('.')[0],
         },
       },
-      "deletions": {
-        "device": false,
-        "location": _selectedLocation == null,
-        "datetime": false,
-        "camera": false,
-      },
+      'color_profile': widget.metadata.allMetadata['color_profile'],
+      'color_stats': widget.metadata.allMetadata['color_stats'],
+      'histogram': widget.metadata.allMetadata['histogram'],
     };
 
-    final success = await _metadataService.modifyMetadata(
+    final modifiedImageBytes = await _metadataService.modifyMetadata(
       widget.imagePath,
-      modifications,
+      {'metadata': updatedMetadata},
     );
-
+    print(modifiedImageBytes);
     setState(() => _isLoading = false);
 
-    if (success) {
-      Navigator.pop(context, true);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update metadata')),
+    if (modifiedImageBytes != null && context.mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) =>
+                  ModificationSuccessScreen(imageBytes: modifiedImageBytes),
+        ),
       );
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update metadata')),
+        );
+      }
     }
   }
 
@@ -202,8 +240,30 @@ class _EditMetadataScreenState extends State<EditMetadataScreen> {
             const SizedBox(height: 8),
             ElevatedButton.icon(
               onPressed: () async {
-                // Open full screen map for location selection
-                // Implement this functionality
+                final selectedPlace = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => PlacePicker(
+                          apiKey: dotenv.env['GOOGLE_MAPS_API_KEY']!,
+                          onPlacePicked: (result) {
+                            Navigator.of(context).pop(result);
+                          },
+                          initialPosition:
+                              _selectedLocation ?? const LatLng(0.0, 0.0),
+                          useCurrentLocation: true,
+                        ),
+                  ),
+                );
+
+                if (selectedPlace != null) {
+                  setState(() {
+                    _selectedLocation = LatLng(
+                      selectedPlace.geometry!.location.lat,
+                      selectedPlace.geometry!.location.lng,
+                    );
+                  });
+                }
               },
               icon: const Icon(Icons.edit_location),
               label: const Text('Select Location'),

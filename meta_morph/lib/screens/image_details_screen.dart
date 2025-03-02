@@ -16,92 +16,92 @@ class ImageDetailsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Image Details'),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text('Image Details'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.home),
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/', (route) => false);
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (hasLocation) ...[
-              GestureDetector(
-                onTap: () {
-                  launchUrl(
-                    Uri.parse(
-                      'https://www.google.com/maps/search/?api=1&query=${metadata.latitude},${metadata.longitude}',
+              Container(
+                height: MediaQuery.of(context).size.height * 0.4,
+                margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
-                child: Container(
-                  height: MediaQuery.of(context).size.height * 0.4,
-                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        spreadRadius: 2,
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Stack(
-                      children: [
-                        GoogleMap(
-                          mapType: MapType.normal,
-                          initialCameraPosition: CameraPosition(
-                            target: LatLng(
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    children: [
+                      GoogleMap(
+                        mapType: MapType.normal,
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(
+                            metadata.latitude!,
+                            metadata.longitude!,
+                          ),
+                          zoom: 15,
+                        ),
+                        markers: {
+                          Marker(
+                            markerId: const MarkerId('imageLocation'),
+                            position: LatLng(
                               metadata.latitude!,
                               metadata.longitude!,
                             ),
-                            zoom: 15,
-                          ),
-                          markers: {
-                            Marker(
-                              markerId: const MarkerId('imageLocation'),
-                              position: LatLng(
-                                metadata.latitude!,
-                                metadata.longitude!,
-                              ),
-                              infoWindow: InfoWindow(
-                                title: 'Photo Location',
-                                snippet:
-                                    '${metadata.latitude!.toStringAsFixed(6)}, ${metadata.longitude!.toStringAsFixed(6)}',
-                              ),
+                            infoWindow: InfoWindow(
+                              title: 'Photo Location',
+                              snippet:
+                                  '${metadata.latitude!.toStringAsFixed(6)}, ${metadata.longitude!.toStringAsFixed(6)}',
                             ),
+                          ),
+                        },
+                        myLocationEnabled: false,
+                        zoomControlsEnabled: true,
+                        mapToolbarEnabled: true,
+                      ),
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        child: FloatingActionButton(
+                          heroTag: 'openMap',
+                          onPressed: () {
+                            launchUrl(
+                              Uri.parse(
+                                'https://www.google.com/maps/search/?api=1&query=${metadata.latitude},${metadata.longitude}',
+                              ),
+                            );
                           },
-                          myLocationEnabled: false,
-                          zoomControlsEnabled: true,
-                          mapToolbarEnabled: true,
-                        ),
-                        Positioned(
-                          bottom: 16,
-                          left: 16,
-                          child: FloatingActionButton(
-                            heroTag: 'openMap',
-                            onPressed: () {
-                              launchUrl(
-                                Uri.parse(
-                                  'https://www.google.com/maps/search/?api=1&query=${metadata.latitude},${metadata.longitude}',
-                                ),
-                              );
-                            },
-                            backgroundColor: Colors.white,
-                            child: const Icon(
-                              Icons.open_in_new,
-                              color: Colors.blue,
-                            ),
+                          backgroundColor: Colors.white,
+                          child: const Icon(
+                            Icons.open_in_new,
+                            color: Colors.blue,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -230,8 +230,7 @@ class ImageDetailsScreen extends StatelessWidget {
                               ),
                             );
                             if (result == true) {
-                              // Refresh the metadata
-                              // You'll need to implement this
+                              Navigator.pop(context);
                             }
                           },
                           style: ElevatedButton.styleFrom(

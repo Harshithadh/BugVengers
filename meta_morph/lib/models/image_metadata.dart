@@ -32,7 +32,6 @@ class ImageMetadata {
     );
   }
 
-  // Helper getters for commonly used values
   String? get make => exif?['device']?['Make'] as String?;
   String? get model => exif?['device']?['Model'] as String?;
   String? get software => exif?['device']?['Software'] as String?;

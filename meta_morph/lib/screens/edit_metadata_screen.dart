@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_place_picker_mb/google_maps_place_picker.dart';
 import '../models/image_metadata_model.dart';
 import '../services/metadata_service.dart';
 import '../screens/modification_success_screen.dart';
+// import 'package:google_maps_place_picker_mb/google_maps_place_picker.dart';
+// import 'package:google_maps_place_picker_mb/google_maps_place_picker_mb.dart';
 
 class EditMetadataScreen extends StatefulWidget {
   final ImageMetadata metadata;
@@ -238,8 +242,34 @@ class _EditMetadataScreenState extends State<EditMetadataScreen> {
             const SizedBox(height: 8),
             ElevatedButton.icon(
               onPressed: () async {
-                // Open full screen map for location selection
-                // Implement this functionality
+                final selectedPlace = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => PlacePicker(
+                          apiKey: dotenv.env['GOOGLE_MAPS_API_KEY']!,
+                          onPlacePicked: (result) {
+                            Navigator.of(context).pop(result);
+                          },
+                          initialPosition:
+                              _selectedLocation ??
+                              const LatLng(
+                                0.0,
+                                0.0,
+                              ), // Default to Google HQ if no location
+                          useCurrentLocation: true,
+                        ),
+                  ),
+                );
+
+                if (selectedPlace != null) {
+                  setState(() {
+                    _selectedLocation = LatLng(
+                      selectedPlace.geometry!.location.lat,
+                      selectedPlace.geometry!.location.lng,
+                    );
+                  });
+                }
               },
               icon: const Icon(Icons.edit_location),
               label: const Text('Select Location'),

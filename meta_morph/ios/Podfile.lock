@@ -2,6 +2,8 @@ PODS:
   - Flutter (1.0.0)
   - flutter_sharing_intent (0.0.1):
     - Flutter
+  - geolocator_apple (1.2.0):
+    - Flutter
   - Google-Maps-iOS-Utils (6.1.0):
     - GoogleMaps (~> 9.0)
   - google_maps_flutter_ios (0.0.1):
@@ -12,6 +14,8 @@ PODS:
     - GoogleMaps/Maps (= 9.3.0)
   - GoogleMaps/Maps (9.3.0)
   - image_picker_ios (0.0.1):
+    - Flutter
+  - package_info_plus (0.4.5):
     - Flutter
   - path_provider_foundation (0.0.1):
     - Flutter
@@ -24,8 +28,10 @@ PODS:
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_sharing_intent (from `.symlinks/plugins/flutter_sharing_intent/ios`)
+  - geolocator_apple (from `.symlinks/plugins/geolocator_apple/ios`)
   - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
@@ -40,10 +46,14 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_sharing_intent:
     :path: ".symlinks/plugins/flutter_sharing_intent/ios"
+  geolocator_apple:
+    :path: ".symlinks/plugins/geolocator_apple/ios"
   google_maps_flutter_ios:
     :path: ".symlinks/plugins/google_maps_flutter_ios/ios"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   share_plus:
@@ -54,10 +64,12 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_sharing_intent: e35380d0e1501d7111dbb7e46d5ac6339da6da98
+  geolocator_apple: 9bcea1918ff7f0062d98345d238ae12718acfbc1
   Google-Maps-iOS-Utils: 0a484b05ed21d88c9f9ebbacb007956edd508a96
   google_maps_flutter_ios: e31555a04d1986ab130f2b9f24b6cdc861acc6d3
   GoogleMaps: b58e9627004f47043897eeae830c3ef023678f3b
   image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
+  package_info_plus: 115f4ad11e0698c8c1c5d8a689390df880f47e85
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   share_plus: c3fef564749587fc939ef86ffb283ceac0baf9f5
   url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe

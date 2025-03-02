@@ -10,7 +10,25 @@ class FullMetadataScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // return Scaffold();
     return Scaffold(
-      appBar: AppBar(title: const Text('All Metadata'), centerTitle: true),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text('Image Metadata'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.home),
+            onPressed: () {
+              // Navigate to home screen clearing the stack
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                '/', // Assuming '/' is your home route
+                (route) => false,
+              );
+            },
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

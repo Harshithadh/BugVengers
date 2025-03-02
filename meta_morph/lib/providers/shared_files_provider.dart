@@ -23,14 +23,12 @@ class SharedFilesNotifier extends StateNotifier<List<SharedFileModel>> {
 
   Future<void> _initSharing() async {
     try {
-      // Get initial shared files first
       final initialFiles =
           await FlutterSharingIntent.instance.getInitialSharing();
       if (initialFiles.isNotEmpty) {
         await _handleSharedFiles(ref, initialFiles);
       }
 
-      // Then listen for new shares
       _intentDataStreamSubscription = FlutterSharingIntent.instance
           .getMediaStream()
           .listen(
@@ -49,11 +47,9 @@ class SharedFilesNotifier extends StateNotifier<List<SharedFileModel>> {
 
   Future<void> _handleSharedFiles(Ref ref, List<SharedFile> files) async {
     try {
-      // First update state with basic file info
       final models = files.map((file) => SharedFileModel(file: file)).toList();
       state = models;
 
-      // Then fetch metadata for images
       for (var i = 0; i < models.length; i++) {
         if (models[i].file.type == SharedMediaType.IMAGE) {
           try {

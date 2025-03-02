@@ -20,11 +20,9 @@ class FullMetadataScreen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.home),
             onPressed: () {
-              // Navigate to home screen clearing the stack
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                '/', // Assuming '/' is your home route
-                (route) => false,
-              );
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/', (route) => false);
             },
           ),
         ],

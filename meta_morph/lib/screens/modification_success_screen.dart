@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-// import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ModificationSuccessScreen extends StatelessWidget {
@@ -15,8 +14,6 @@ class ModificationSuccessScreen extends StatelessWidget {
       final tempDir = await getTemporaryDirectory();
       final tempFile = File('${tempDir.path}/modified_image.jpg');
       await tempFile.writeAsBytes(imageBytes);
-
-      // final result = await ImageGallerySaver.saveFile(tempFile.path);
 
       if (context.mounted) {
         ScaffoldMessenger.of(

@@ -44,7 +44,6 @@ class _EditMetadataScreenState extends State<EditMetadataScreen> {
       text: widget.metadata.deviceInfo['Software'],
     );
 
-    // Convert date format from "YYYY:MM:DD HH:mm:ss" to "YYYY-MM-DD HH:mm:ss"
     if (widget.metadata.dateTime != null) {
       final formattedDate = widget.metadata.dateTime!
           .replaceFirst(':', '-')
@@ -65,7 +64,6 @@ class _EditMetadataScreenState extends State<EditMetadataScreen> {
   Future<void> _saveChanges() async {
     setState(() => _isLoading = true);
 
-    // Create a copy of the original metadata and update only the changed fields
     final updatedMetadata = {
       'filename': widget.metadata.allMetadata['filename'],
       'format': widget.metadata.allMetadata['format'],
@@ -252,11 +250,7 @@ class _EditMetadataScreenState extends State<EditMetadataScreen> {
                             Navigator.of(context).pop(result);
                           },
                           initialPosition:
-                              _selectedLocation ??
-                              const LatLng(
-                                0.0,
-                                0.0,
-                              ), // Default to Google HQ if no location
+                              _selectedLocation ?? const LatLng(0.0, 0.0),
                           useCurrentLocation: true,
                         ),
                   ),

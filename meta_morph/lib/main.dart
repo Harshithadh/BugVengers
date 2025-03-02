@@ -25,12 +25,6 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.light,
         ),
         useMaterial3: true,
-        // appBarTheme: AppBarTheme(
-        //   elevation: 0,
-        //   backgroundColor: Colors.white,
-        //   foregroundColor: Colors.black,
-        //   centerTitle: true,
-        // ),
       ),
       home: HomeScreen(),
     );

@@ -230,8 +230,7 @@ class ImageDetailsScreen extends StatelessWidget {
                               ),
                             );
                             if (result == true) {
-                              // Refresh the metadata
-                              // You'll need to implement this
+                              Navigator.pop(context);
                             }
                           },
                           style: ElevatedButton.styleFrom(

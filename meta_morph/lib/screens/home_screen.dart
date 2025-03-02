@@ -44,7 +44,7 @@ class HomeScreen extends ConsumerWidget {
                             .read(imageServiceProvider)
                             .getImageMetadata(file);
 
-                        if (metadata != null && context.mounted) {
+                        if (context.mounted) {
                           ref
                               .read(sharedFilesProvider.notifier)
                               .addFile(
